@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, Eye, EyeOff, Lock, Unlock, MessageSquare, Plus, ExternalLink, Copy } from "lucide-react";
+import { ArrowLeft, Save, Lock, Unlock, MessageSquare, Plus, ExternalLink, Copy } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import QuestionEditor from "@/components/QuestionEditor";
@@ -45,7 +45,6 @@ export default function FormEditor() {
         .select("*")
         .eq("id", id)
         .single();
-
       if (formError) throw formError;
 
       const { data: styleData } = await supabase
@@ -56,10 +55,7 @@ export default function FormEditor() {
 
       const { data: questionsData } = await supabase
         .from("questions")
-        .select(`
-          *,
-          question_options (*)
-        `)
+        .select(`*, question_options (*)`)
         .eq("form_id", id)
         .order("position");
 
@@ -94,7 +90,6 @@ export default function FormEditor() {
           status: form.status,
         })
         .eq("id", id);
-
       if (formError) throw formError;
 
       const { error: styleError } = await supabase
@@ -103,7 +98,6 @@ export default function FormEditor() {
           form_id: id,
           ...form.style,
         });
-
       if (styleError) throw styleError;
 
       await supabase.from("questions").delete().eq("form_id", id);
@@ -121,7 +115,6 @@ export default function FormEditor() {
           })
           .select()
           .single();
-
         if (qError) throw qError;
 
         if (question.options && question.options.length > 0) {
@@ -130,11 +123,9 @@ export default function FormEditor() {
             label: opt.label,
             position: idx,
           }));
-
           const { error: optError } = await supabase
             .from("question_options")
             .insert(options);
-
           if (optError) throw optError;
         }
       }
@@ -161,7 +152,6 @@ export default function FormEditor() {
         .from("forms")
         .update({ status: newStatus })
         .eq("id", id);
-
       if (error) throw error;
 
       setForm((prev: any) => ({ ...prev, status: newStatus }));
@@ -209,7 +199,6 @@ export default function FormEditor() {
         .from("form_responses")
         .delete()
         .eq("id", responseId);
-
       if (error) throw error;
 
       setResponses(responses.filter((r) => r.id !== responseId));
@@ -242,14 +231,14 @@ export default function FormEditor() {
 
   if (authLoading || loading || !form) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800 text-white">
         <p>טוען...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white p-6">
       <AIAssistant onImageGenerated={handleImageGenerated} />
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-6">
@@ -297,7 +286,7 @@ export default function FormEditor() {
                   תגובות ({responses.length})
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+              <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto bg-gray-800 text-white">
                 <DialogHeader>
                   <DialogTitle>תגובות לטופס</DialogTitle>
                   <DialogDescription>
@@ -306,7 +295,7 @@ export default function FormEditor() {
                 </DialogHeader>
                 <div className="space-y-4">
                   {responses.map((response) => (
-                    <Card key={response.id} className="p-4">
+                    <Card key={response.id} className="p-4 bg-gray-700 text-white">
                       <div className="flex justify-between items-start mb-2">
                         <p className="text-sm text-muted-foreground">
                           {new Date(response.submitted_at).toLocaleString("he-IL")}
@@ -375,13 +364,14 @@ export default function FormEditor() {
           </TabsList>
 
           <TabsContent value="edit" className="space-y-4">
-            <Card className="p-6">
+            <Card className="p-6 bg-gray-800 text-white">
               <div className="space-y-4">
                 <div>
                   <Label>כותרת הטופס</Label>
                   <Input
                     value={form.title}
                     onChange={(e) => setForm({ ...form, title: e.target.value })}
+                    className="bg-gray-700 text-white"
                   />
                 </div>
                 <div>
@@ -390,6 +380,7 @@ export default function FormEditor() {
                     value={form.description || ""}
                     onChange={(e) => setForm({ ...form, description: e.target.value })}
                     rows={3}
+                    className="bg-gray-700 text-white"
                   />
                 </div>
               </div>
@@ -404,7 +395,7 @@ export default function FormEditor() {
               />
             ))}
 
-            <Card className="p-6">
+            <Card className="p-6 bg-gray-800 text-white">
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                 <Button variant="outline" onClick={() => addQuestion("text")} className="bg-black text-white hover:bg-gray-800">
                   <Plus className="w-4 h-4 ml-2" />
