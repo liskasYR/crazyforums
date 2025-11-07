@@ -190,15 +190,35 @@ export default function EditorDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2">
-                    <Button variant="outline" size="sm" onClick={() => navigate(`/editor/${form.id}`)}>
+                    {/* כפתור עריכה */}
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="bg-black text-white hover:bg-gray-800"
+                      onClick={() => navigate(`/editor/${form.id}`)}
+                    >
                       <Edit className="w-4 h-4 ml-1" /> ערוך
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => copyFormLink(form.slug)}>
+
+                    {/* כפתור העתק קישור */}
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="bg-black text-white hover:bg-gray-800"
+                      onClick={() => copyFormLink(form.slug)}
+                    >
                       <ExternalLink className="w-4 h-4 ml-1" /> העתק קישור
                     </Button>
+
+                    {/* כפתור שתף */}
                     <Dialog>
                       <DialogTrigger asChild>
-                        <Button variant="outline" size="sm" onClick={() => setSelectedFormId(form.id)}>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="bg-black text-white hover:bg-gray-800"
+                          onClick={() => setSelectedFormId(form.id)}
+                        >
                           <Share2 className="w-4 h-4 ml-1" /> שתף
                         </Button>
                       </DialogTrigger>
@@ -228,10 +248,16 @@ export default function EditorDashboard() {
                         </div>
                       </DialogContent>
                     </Dialog>
+
+                    {/* כפתור מחיקה */}
                     {form.created_by === user?.id && (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="sm">
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            className="bg-black text-white hover:bg-gray-800"
+                          >
                             <Trash2 className="w-4 h-4 ml-1" /> מחק
                           </Button>
                         </AlertDialogTrigger>
