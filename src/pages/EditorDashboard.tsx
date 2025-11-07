@@ -165,7 +165,13 @@ export default function EditorDashboard() {
               <Plus className="w-4 h-4 ml-2" />
               טופס חדש
             </Button>
-            <Button variant="outline" onClick={signOut}>
+
+            {/* כפתור התנתק שחור */}
+            <Button
+              variant="default"
+              onClick={signOut}
+              className="bg-black text-white hover:bg-gray-800"
+            >
               <LogOut className="w-4 h-4 ml-2" />
               התנתק
             </Button>
