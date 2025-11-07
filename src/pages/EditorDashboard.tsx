@@ -22,20 +22,15 @@ export default function EditorDashboard() {
   const [inviting, setInviting] = useState(false);
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/auth");
-    }
+    if (!authLoading && !user) navigate("/auth");
   }, [user, authLoading, navigate]);
 
   useEffect(() => {
-    if (user) {
-      loadForms();
-    }
+    if (user) loadForms();
   }, [user]);
 
   const loadForms = async () => {
     try {
-      // Get forms where user is creator
       const { data: ownedForms, error: ownedError } = await supabase
         .from("forms")
         .select("*")
@@ -44,7 +39,6 @@ export default function EditorDashboard() {
 
       if (ownedError) throw ownedError;
 
-      // Get forms where user is an editor
       const { data: editorRelations, error: editorError } = await supabase
         .from("form_editors")
         .select("form_id")
@@ -52,8 +46,8 @@ export default function EditorDashboard() {
 
       if (editorError) throw editorError;
 
-      const editorFormIds = editorRelations?.map(r => r.form_id) || [];
-      
+      const editorFormIds = editorRelations?.map((r) => r.form_id) || [];
+
       let sharedForms = [];
       if (editorFormIds.length > 0) {
         const { data: sharedFormsData, error: sharedError } = await supabase
@@ -66,19 +60,11 @@ export default function EditorDashboard() {
         sharedForms = sharedFormsData || [];
       }
 
-      // Combine and deduplicate forms
       const allForms = [...(ownedForms || []), ...sharedForms];
-      const uniqueForms = Array.from(
-        new Map(allForms.map(form => [form.id, form])).values()
-      );
-
+      const uniqueForms = Array.from(new Map(allForms.map((form) => [form.id, form])).values());
       setForms(uniqueForms);
-    } catch (error: any) {
-      toast({
-        title: "שגיאה",
-        description: "לא ניתן לטעון טפסים",
-        variant: "destructive",
-      });
+    } catch {
+      toast({ title: "שגיאה", description: "לא ניתן לטעון טפסים", variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -87,8 +73,7 @@ export default function EditorDashboard() {
   const createNewForm = async () => {
     try {
       const slug = await supabase.rpc("generate_unique_slug", { base_text: "new-form" });
-
-      const { data: newForm, error: formError } = await supabase
+      const { data: newForm, error } = await supabase
         .from("forms")
         .insert({
           title: "טופס חדש",
@@ -99,57 +84,30 @@ export default function EditorDashboard() {
         .select()
         .single();
 
-      if (formError) throw formError;
-
-      const { error: styleError } = await supabase
-        .from("form_styles")
-        .insert({
-          form_id: newForm.id,
-        });
-
-      if (styleError) throw styleError;
-
+      if (error) throw error;
+      await supabase.from("form_styles").insert({ form_id: newForm.id });
       navigate(`/editor/${newForm.id}`);
-    } catch (error: any) {
-      toast({
-        title: "שגיאה",
-        description: "לא ניתן ליצור טופס",
-        variant: "destructive",
-      });
+    } catch {
+      toast({ title: "שגיאה", description: "לא ניתן ליצור טופס", variant: "destructive" });
     }
   };
 
   const deleteForm = async (formId: string) => {
     try {
-      const { error } = await supabase
-        .from("forms")
-        .delete()
-        .eq("id", formId);
-
+      const { error } = await supabase.from("forms").delete().eq("id", formId);
       if (error) throw error;
-
       setForms((prev) => prev.filter((f) => f.id !== formId));
-      toast({
-        title: "הטופס נמחק",
-      });
-    } catch (error: any) {
-      toast({
-        title: "שגיאה",
-        description: "לא ניתן למחוק טופס",
-        variant: "destructive",
-      });
+      toast({ title: "הטופס נמחק" });
+    } catch {
+      toast({ title: "שגיאה", description: "לא ניתן למחוק טופס", variant: "destructive" });
     }
   };
 
   const sendInvitation = async () => {
     if (!inviteEmail || !selectedFormId) return;
-
     setInviting(true);
     try {
-      // Get form details
       const form = forms.find((f) => f.id === selectedFormId);
-
-      // Call edge function to send email
       const { error } = await supabase.functions.invoke("send-editor-invitation", {
         body: {
           toEmail: inviteEmail,
@@ -158,22 +116,12 @@ export default function EditorDashboard() {
           inviterName: user?.email || "משתמש",
         },
       });
-
       if (error) throw error;
-
-      toast({
-        title: "ההזמנה נשלחה!",
-        description: `הזמנה נשלחה ל-${inviteEmail}`,
-      });
-
+      toast({ title: "ההזמנה נשלחה!", description: `הוזמנה ל-${inviteEmail}` });
       setInviteEmail("");
       setSelectedFormId("");
-    } catch (error: any) {
-      toast({
-        title: "שגיאה",
-        description: "לא ניתן לשלוח הזמנה",
-        variant: "destructive",
-      });
+    } catch {
+      toast({ title: "שגיאה", description: "לא ניתן לשלוח הזמנה", variant: "destructive" });
     } finally {
       setInviting(false);
     }
@@ -182,30 +130,38 @@ export default function EditorDashboard() {
   const copyFormLink = (slug: string) => {
     const link = `${window.location.origin}/f/${slug}`;
     navigator.clipboard.writeText(link);
-    toast({
-      title: "הקישור הועתק!",
-      description: "קישור הטופס הועתק ללוח",
-    });
+    toast({ title: "הקישור הועתק!", description: "הועתק ללוח" });
   };
 
-  if (authLoading || loading) {
+  if (authLoading || loading)
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center text-white bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900 animate-background">
         <p>טוען...</p>
       </div>
     );
-  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 p-6">
+    <div className="min-h-screen text-white bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900 animate-background p-6">
+      <style>{`
+        @keyframes rgbGradient {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .animate-background {
+          animation: rgbGradient 20s ease infinite;
+          background-size: 400% 400%;
+        }
+      `}</style>
+
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold">הטפסים שלי</h1>
-            <p className="text-muted-foreground">{user?.email}</p>
+            <h1 className="text-3xl font-bold rgb-text">הטפסים שלי</h1>
+            <p className="text-gray-300">{user?.email}</p>
           </div>
           <div className="flex gap-2">
-            <Button onClick={createNewForm}>
+            <Button onClick={createNewForm} className="bg-purple-600 hover:bg-purple-700">
               <Plus className="w-4 h-4 ml-2" />
               טופס חדש
             </Button>
@@ -217,9 +173,9 @@ export default function EditorDashboard() {
         </div>
 
         {forms.length === 0 ? (
-          <Card className="p-12 text-center">
-            <p className="text-muted-foreground mb-4">אין לך טפסים עדיין</p>
-            <Button onClick={createNewForm}>
+          <Card className="p-12 text-center bg-gray-900/50 border border-purple-500 text-white">
+            <p className="text-gray-400 mb-4">אין לך טפסים עדיין</p>
+            <Button onClick={createNewForm} className="bg-purple-600 hover:bg-purple-700">
               <Plus className="w-4 h-4 ml-2" />
               צור טופס ראשון
             </Button>
@@ -227,46 +183,29 @@ export default function EditorDashboard() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {forms.map((form) => (
-              <Card key={form.id}>
+              <Card key={form.id} className="bg-gray-900/70 border border-purple-500 text-white">
                 <CardHeader>
                   <CardTitle>{form.title}</CardTitle>
-                  <CardDescription>{form.description}</CardDescription>
+                  <CardDescription className="text-gray-400">{form.description}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate(`/editor/${form.id}`)}
-                    >
-                      <Edit className="w-4 h-4 ml-1" />
-                      ערוך
+                    <Button variant="outline" size="sm" onClick={() => navigate(`/editor/${form.id}`)}>
+                      <Edit className="w-4 h-4 ml-1" /> ערוך
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => copyFormLink(form.slug)}
-                    >
-                      <ExternalLink className="w-4 h-4 ml-1" />
-                      העתק קישור
+                    <Button variant="outline" size="sm" onClick={() => copyFormLink(form.slug)}>
+                      <ExternalLink className="w-4 h-4 ml-1" /> העתק קישור
                     </Button>
                     <Dialog>
                       <DialogTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setSelectedFormId(form.id)}
-                        >
-                          <Share2 className="w-4 h-4 ml-1" />
-                          שתף
+                        <Button variant="outline" size="sm" onClick={() => setSelectedFormId(form.id)}>
+                          <Share2 className="w-4 h-4 ml-1" /> שתף
                         </Button>
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>
                           <DialogTitle>שתף גישה לעריכה</DialogTitle>
-                          <DialogDescription>
-                            הזן כתובת אימייל של עורך נוסף
-                          </DialogDescription>
+                          <DialogDescription>הזן כתובת אימייל של עורך נוסף</DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4">
                           <div>
@@ -282,7 +221,7 @@ export default function EditorDashboard() {
                           <Button
                             onClick={sendInvitation}
                             disabled={inviting || !inviteEmail}
-                            className="w-full"
+                            className="w-full bg-purple-600 hover:bg-purple-700"
                           >
                             {inviting ? "שולח..." : "שלח הזמנה"}
                           </Button>
@@ -293,8 +232,7 @@ export default function EditorDashboard() {
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button variant="destructive" size="sm">
-                            <Trash2 className="w-4 h-4 ml-1" />
-                            מחק
+                            <Trash2 className="w-4 h-4 ml-1" /> מחק
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
@@ -306,9 +244,7 @@ export default function EditorDashboard() {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>ביטול</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => deleteForm(form.id)}>
-                              מחק
-                            </AlertDialogAction>
+                            <AlertDialogAction onClick={() => deleteForm(form.id)}>מחק</AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
