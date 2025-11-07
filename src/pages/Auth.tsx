@@ -61,7 +61,7 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900 p-4">
       <Card className="w-full max-w-md border border-purple-500 shadow-[0_0_20px_rgba(128,0,255,0.5)] bg-gradient-to-br from-gray-900 to-gray-800 text-white">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold text-purple-400">בונה טפסים</CardTitle>
