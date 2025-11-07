@@ -61,12 +61,30 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900 p-4 animate-background">
       <style>{`
         @keyframes rgbGradient {
           0% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
           100% { background-position: 0% 50%; }
+        }
+
+        @keyframes bounceOnce {
+          0%   { transform: translateY(0); }
+          30%  { transform: translateY(-8px); }
+          60%  { transform: translateY(4px); }
+          100% { transform: translateY(0); }
+        }
+
+        @keyframes pulseGlow {
+          0% { box-shadow: 0 0 10px rgba(128,0,255,0.4); }
+          50% { box-shadow: 0 0 20px rgba(128,0,255,0.8); }
+          100% { box-shadow: 0 0 10px rgba(128,0,255,0.4); }
+        }
+
+        .animate-background {
+          animation: rgbGradient 20s ease infinite;
+          background-size: 400% 400%;
         }
 
         .rgb-text {
@@ -77,19 +95,34 @@ export default function Auth() {
           -webkit-text-fill-color: transparent;
         }
 
-        @keyframes bounceOnce {
-          0%   { transform: translateY(0); }
-          30%  { transform: translateY(-8px); }
-          60%  { transform: translateY(4px); }
-          100% { transform: translateY(0); }
-        }
-
         .bounce-once {
           animation: bounceOnce 0.6s ease;
         }
+
+        .animated-card {
+          animation: pulseGlow 3s ease-in-out infinite;
+        }
+
+        .animated-input {
+          transition: all 0.3s ease;
+        }
+
+        .animated-input:focus {
+          transform: scale(1.02);
+          box-shadow: 0 0 10px rgba(128,0,255,0.6);
+        }
+
+        .animated-button {
+          transition: all 0.3s ease;
+        }
+
+        .animated-button:hover {
+          transform: scale(1.03);
+          box-shadow: 0 0 12px rgba(128,0,255,0.7);
+        }
       `}</style>
 
-      <Card className="w-full max-w-md border border-purple-500 shadow-[0_0_20px_rgba(128,0,255,0.5)] bg-gradient-to-br from-gray-900 to-gray-800 text-white">
+      <Card className="w-full max-w-md border border-purple-500 animated-card bg-gradient-to-br from-gray-900 to-gray-800 text-white">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold rgb-text">בונה אתרים</CardTitle>
           <p className="text-sm text-gray-400">התחבר או הירשם כדי להתחיל</p>
@@ -130,7 +163,7 @@ export default function Auth() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     placeholder="your@email.com"
-                    className="bg-gray-800 text-white border-purple-500"
+                    className="bg-gray-800 text-white border-purple-500 animated-input"
                   />
                 </div>
                 <div className="space-y-2">
@@ -143,10 +176,10 @@ export default function Auth() {
                     required
                     placeholder="••••••••"
                     minLength={6}
-                    className="bg-gray-800 text-white border-purple-500"
+                    className="bg-gray-800 text-white border-purple-500 animated-input"
                   />
                 </div>
-                <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700" disabled={loading}>
+                <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700 animated-button" disabled={loading}>
                   {loading ? "מתחבר..." : "התחבר"}
                 </Button>
               </form>
@@ -163,7 +196,7 @@ export default function Auth() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     placeholder="your@email.com"
-                    className="bg-gray-800 text-white border-purple-500"
+                    className="bg-gray-800 text-white border-purple-500 animated-input"
                   />
                 </div>
                 <div className="space-y-2">
@@ -176,17 +209,7 @@ export default function Auth() {
                     required
                     placeholder="••••••••"
                     minLength={6}
-                    className="bg-gray-800 text-white border-purple-500"
+                    className="bg-gray-800 text-white border-purple-500 animated-input"
                   />
                 </div>
-                <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700" disabled={loading}>
-                  {loading ? "נרשם..." : "הירשם"}
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
+                <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700 animated-button" disabled={loading}>
