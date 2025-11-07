@@ -20,9 +20,11 @@ export default function Auth() {
       if (session) navigate("/editor");
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) navigate("/editor");
-    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (session) navigate("/editor");
+      }
+    );
 
     return () => subscription.unsubscribe();
   }, [navigate]);
@@ -37,10 +39,17 @@ export default function Auth() {
         options: { emailRedirectTo: `${window.location.origin}/editor` },
       });
       if (error) throw error;
-      toast({ title: "נרשמת בהצלחה!", description: "כעת תוכל להתחבר עם הפרטים שהזנת." });
+      toast({
+        title: "נרשמת בהצלחה!",
+        description: "כעת תוכל להתחבר עם הפרטים שהזנת.",
+      });
       await handleSignIn(e);
     } catch (error: any) {
-      toast({ title: "שגיאה", description: error.message, variant: "destructive" });
+      toast({
+        title: "שגיאה",
+        description: error.message,
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -50,11 +59,18 @@ export default function Auth() {
     e.preventDefault();
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
       if (error) throw error;
       toast({ title: "התחברת בהצלחה!" });
     } catch (error: any) {
-      toast({ title: "שגיאה", description: error.message, variant: "destructive" });
+      toast({
+        title: "שגיאה",
+        description: error.message,
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -68,25 +84,21 @@ export default function Auth() {
           50% { background-position: 100% 50%; }
           100% { background-position: 0% 50%; }
         }
-
         @keyframes bounceOnce {
-          0%   { transform: translateY(0); }
-          30%  { transform: translateY(-8px); }
-          60%  { transform: translateY(4px); }
+          0% { transform: translateY(0); }
+          30% { transform: translateY(-8px); }
+          60% { transform: translateY(4px); }
           100% { transform: translateY(0); }
         }
-
         @keyframes pulseGlow {
           0% { box-shadow: 0 0 10px rgba(128,0,255,0.4); }
           50% { box-shadow: 0 0 20px rgba(128,0,255,0.8); }
           100% { box-shadow: 0 0 10px rgba(128,0,255,0.4); }
         }
-
         .animate-background {
           animation: rgbGradient 20s ease infinite;
           background-size: 400% 400%;
         }
-
         .rgb-text {
           background: linear-gradient(270deg, #6e00ff, #000000, #ff00ff, #000000);
           background-size: 600% 600%;
@@ -94,28 +106,22 @@ export default function Auth() {
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
         }
-
         .bounce-once {
           animation: bounceOnce 0.6s ease;
         }
-
         .animated-card {
           animation: pulseGlow 3s ease-in-out infinite;
         }
-
         .animated-input {
           transition: all 0.3s ease;
         }
-
         .animated-input:focus {
           transform: scale(1.02);
           box-shadow: 0 0 10px rgba(128,0,255,0.6);
         }
-
         .animated-button {
           transition: all 0.3s ease;
         }
-
         .animated-button:hover {
           transform: scale(1.03);
           box-shadow: 0 0 12px rgba(128,0,255,0.7);
@@ -127,6 +133,7 @@ export default function Auth() {
           <CardTitle className="text-3xl font-bold rgb-text">בונה אתרים</CardTitle>
           <p className="text-sm text-gray-400">התחבר או הירשם כדי להתחיל</p>
         </CardHeader>
+
         <CardContent>
           <Tabs defaultValue="signin" dir="rtl" className="text-white">
             <TabsList className="grid w-full grid-cols-2 bg-gray-700 rounded-md mb-4">
@@ -152,10 +159,13 @@ export default function Auth() {
               </TabsTrigger>
             </TabsList>
 
+            {/* טופס התחברות */}
             <TabsContent value="signin">
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="signin-email" className="text-gray-300">אימייל</Label>
+                  <Label htmlFor="signin-email" className="text-gray-300">
+                    אימייל
+                  </Label>
                   <Input
                     id="signin-email"
                     type="email"
@@ -167,7 +177,9 @@ export default function Auth() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signin-password" className="text-gray-300">סיסמה</Label>
+                  <Label htmlFor="signin-password" className="text-gray-300">
+                    סיסמה
+                  </Label>
                   <Input
                     id="signin-password"
                     type="password"
@@ -179,16 +191,23 @@ export default function Auth() {
                     className="bg-gray-800 text-white border-purple-500 animated-input"
                   />
                 </div>
-                <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700 animated-button" disabled={loading}>
+                <Button
+                  type="submit"
+                  className="w-full bg-purple-600 hover:bg-purple-700 animated-button"
+                  disabled={loading}
+                >
                   {loading ? "מתחבר..." : "התחבר"}
                 </Button>
               </form>
             </TabsContent>
 
+            {/* טופס הרשמה */}
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="signup-email" className="text-gray-300">אימייל</Label>
+                  <Label htmlFor="signup-email" className="text-gray-300">
+                    אימייל
+                  </Label>
                   <Input
                     id="signup-email"
                     type="email"
@@ -200,7 +219,9 @@ export default function Auth() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-password" className="text-gray-300">סיסמה</Label>
+                  <Label htmlFor="signup-password" className="text-gray-300">
+                    סיסמה
+                  </Label>
                   <Input
                     id="signup-password"
                     type="password"
@@ -211,8 +232,12 @@ export default function Auth() {
                     minLength={6}
                     className="bg-gray-800 text-white border-purple-500 animated-input"
                   />
-                </div>                
-                <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700 animated-button" disabled={loading}>
+                </div>
+                <Button
+                  type="submit"
+                  className="w-full bg-purple-600 hover:bg-purple-700 animated-button"
+                  disabled={loading}
+                >
                   {loading ? "נרשם..." : "הירשם"}
                 </Button>
               </form>
@@ -222,5 +247,4 @@ export default function Auth() {
       </Card>
     </div>
   );
-}}
-
+}
