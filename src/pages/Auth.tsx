@@ -62,16 +62,61 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900 p-4">
+      <style>{`
+        @keyframes rgbGradient {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+
+        .rgb-text {
+          background: linear-gradient(270deg, #6e00ff, #000000, #ff00ff, #000000);
+          background-size: 600% 600%;
+          animation: rgbGradient 8s ease infinite;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        @keyframes bounceOnce {
+          0%   { transform: translateY(0); }
+          30%  { transform: translateY(-8px); }
+          60%  { transform: translateY(4px); }
+          100% { transform: translateY(0); }
+        }
+
+        .bounce-once {
+          animation: bounceOnce 0.6s ease;
+        }
+      `}</style>
+
       <Card className="w-full max-w-md border border-purple-500 shadow-[0_0_20px_rgba(128,0,255,0.5)] bg-gradient-to-br from-gray-900 to-gray-800 text-white">
         <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold text-purple-400">בונה טפסים</CardTitle>
+          <CardTitle className="text-3xl font-bold rgb-text">בונה אתרים</CardTitle>
           <p className="text-sm text-gray-400">התחבר או הירשם כדי להתחיל</p>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="signin" dir="rtl" className="text-white">
             <TabsList className="grid w-full grid-cols-2 bg-gray-700 rounded-md mb-4">
-              <TabsTrigger value="signin" className="text-purple-300 data-[state=active]:bg-purple-600">התחברות</TabsTrigger>
-              <TabsTrigger value="signup" className="text-purple-300 data-[state=active]:bg-purple-600">הרשמה</TabsTrigger>
+              <TabsTrigger
+                value="signin"
+                className="text-purple-300 data-[state=active]:bg-purple-600 transition-all"
+                onClick={(e) => {
+                  e.currentTarget.classList.add("bounce-once");
+                  setTimeout(() => e.currentTarget.classList.remove("bounce-once"), 600);
+                }}
+              >
+                התחברות
+              </TabsTrigger>
+              <TabsTrigger
+                value="signup"
+                className="text-purple-300 data-[state=active]:bg-purple-600 transition-all"
+                onClick={(e) => {
+                  e.currentTarget.classList.add("bounce-once");
+                  setTimeout(() => e.currentTarget.classList.remove("bounce-once"), 600);
+                }}
+              >
+                הרשמה
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="signin">
