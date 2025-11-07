@@ -213,3 +213,13 @@ export default function Auth() {
                   />
                 </div>
                 <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700 animated-button" disabled={loading}>
+              </Button>
+              </form>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
