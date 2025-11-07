@@ -211,9 +211,10 @@ export default function Auth() {
                     minLength={6}
                     className="bg-gray-800 text-white border-purple-500 animated-input"
                   />
-                </div>
+                </div>                
                 <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700 animated-button" disabled={loading}>
-              </Button>
+                  {loading ? "נרשם..." : "הירשם"}
+                </Button>
               </form>
             </TabsContent>
           </Tabs>
@@ -221,5 +222,5 @@ export default function Auth() {
       </Card>
     </div>
   );
-}
+}}
 
