@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sparkles, Send, Image as ImageIcon, X, Loader2 } from "lucide-react";
+import { Sparkles, Send, Image as ImageIcon, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
@@ -17,7 +17,7 @@ interface AIAssistantProps {
   onImageGenerated?: (imageUrl: string) => void;
 }
 
-export default function AIAssistant({ onImageGenerated }: AIAssistantProps) {
+export default function DetaAI({ onImageGenerated }: AIAssistantProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -138,12 +138,10 @@ export default function AIAssistant({ onImageGenerated }: AIAssistantProps) {
         }
       );
 
-      if (!response.ok) {
-        throw new Error("Failed to generate image");
-      }
+      if (!response.ok) throw new Error("Failed to generate image");
 
       const data = await response.json();
-      
+
       setMessages(prev => [
         ...prev,
         { role: "assistant", content: "הנה התמונה שיצרתי:", imageUrl: data.imageUrl },
@@ -194,25 +192,25 @@ export default function AIAssistant({ onImageGenerated }: AIAssistantProps) {
       <DialogTrigger asChild>
         <Button
           variant="outline"
-          className="fixed bottom-6 left-6 rounded-full w-14 h-14 shadow-lg bg-primary text-primary-foreground hover:bg-primary/90"
+          className="fixed bottom-6 left-6 rounded-full w-14 h-14 shadow-lg bg-purple-700 text-white hover:bg-purple-600"
         >
-          <Sparkles className="w-6 h-6" />
+          <Sparkles className="w-6 h-6 animate-spin-slow text-purple-300" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl h-[600px] flex flex-col">
+      <DialogContent className="max-w-2xl h-[600px] flex flex-col bg-gradient-to-br from-purple-900 to-black text-white border border-purple-700">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5" />
-            עוזר AI לעיצוב טפסים
+            <Sparkles className="w-5 h-5 animate-spin-slow text-purple-400" />
+            Deta AI
           </DialogTitle>
         </DialogHeader>
 
         <ScrollArea className="flex-1 pr-4" ref={scrollRef}>
           <div className="space-y-4">
             {messages.length === 0 && (
-              <div className="text-center text-muted-foreground py-8">
-                <Sparkles className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p className="text-lg font-medium mb-2">ברוך הבא לעוזר ה-AI!</p>
+              <div className="text-center text-purple-200 py-8">
+                <Sparkles className="w-12 h-12 mx-auto mb-4 opacity-70 animate-spin-slow" />
+                <p className="text-lg font-medium mb-2">ברוך הבא ל-Deta AI!</p>
                 <p className="text-sm">אני יכול לעזור לך:</p>
                 <ul className="text-sm mt-2 space-y-1">
                   <li>• לעצב טופס מותאם אישית</li>
@@ -230,8 +228,8 @@ export default function AIAssistant({ onImageGenerated }: AIAssistantProps) {
                 <Card
                   className={`p-3 max-w-[80%] ${
                     msg.role === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted"
+                      ? "bg-purple-600 text-white"
+                      : "bg-purple-800 text-purple-200"
                   }`}
                 >
                   <p className="whitespace-pre-wrap text-sm">{msg.content}</p>
@@ -247,7 +245,7 @@ export default function AIAssistant({ onImageGenerated }: AIAssistantProps) {
                           size="sm"
                           variant="outline"
                           onClick={() => insertImage(msg.imageUrl!)}
-                          className="w-full"
+                          className="w-full border-purple-400 text-purple-200 hover:bg-purple-700"
                         >
                           הוסף לטופס
                         </Button>
@@ -259,7 +257,7 @@ export default function AIAssistant({ onImageGenerated }: AIAssistantProps) {
             ))}
             {isLoading && (
               <div className="flex justify-start">
-                <Card className="p-3 bg-muted">
+                <Card className="p-3 bg-purple-800 text-purple-200">
                   <Loader2 className="w-4 h-4 animate-spin" />
                 </Card>
               </div>
@@ -267,20 +265,21 @@ export default function AIAssistant({ onImageGenerated }: AIAssistantProps) {
           </div>
         </ScrollArea>
 
-        <div className="flex gap-2 pt-4 border-t">
+        <div className="flex gap-2 pt-4 border-t border-purple-700">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="שאל שאלה או בקש עזרה..."
             disabled={isLoading || isGeneratingImage}
-            className="flex-1"
+            className="flex-1 bg-purple-900 text-white placeholder-purple-400"
           />
           <Button
             onClick={generateImage}
             disabled={isLoading || isGeneratingImage || !input.trim()}
             variant="outline"
             size="icon"
+            className="border-purple-400 text-purple-300 hover:bg-purple-700"
           >
             {isGeneratingImage ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -292,6 +291,7 @@ export default function AIAssistant({ onImageGenerated }: AIAssistantProps) {
             onClick={handleSend}
             disabled={isLoading || isGeneratingImage || !input.trim()}
             size="icon"
+            className="bg-purple-600 hover:bg-purple-500 text-white"
           >
             <Send className="w-4 h-4" />
           </Button>
