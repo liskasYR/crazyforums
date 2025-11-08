@@ -8,8 +8,24 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, Lock, Unlock, MessageSquare, Plus, ExternalLink, Copy } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
+import {
+  ArrowLeft,
+  Save,
+  Lock,
+  Unlock,
+  MessageSquare,
+  Plus,
+  ExternalLink,
+  Copy,
+} from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import QuestionEditor from "@/components/QuestionEditor";
 import CustomizationPanel from "@/components/CustomizationPanel";
@@ -173,12 +189,13 @@ export default function FormEditor() {
       type,
       title: "שאלה חדשה",
       required: false,
-      options: type === "multiple-choice" || type === "checkbox"
-        ? [
-            { id: `opt-1`, label: "אפשרות 1" },
-            { id: `opt-2`, label: "אפשרות 2" },
-          ]
-        : undefined,
+      options:
+        type === "multiple-choice" || type === "checkbox"
+          ? [
+              { id: `opt-1`, label: "אפשרות 1" },
+              { id: `opt-2`, label: "אפשרות 2" },
+            ]
+          : undefined,
     };
     setQuestions([...questions, newQuestion]);
   };
@@ -223,9 +240,9 @@ export default function FormEditor() {
       ...prev,
       style: {
         ...prev.style,
-        backgroundType: 'image',
+        backgroundType: "image",
         backgroundImage: imageUrl,
-      }
+      },
     }));
   };
 
@@ -273,8 +290,16 @@ export default function FormEditor() {
               disabled={statusSaving || saving}
               className="bg-black text-white hover:bg-gray-800"
             >
-              {form.status === "open" ? <Lock className="w-4 h-4 ml-2" /> : <Unlock className="w-4 h-4 ml-2" />}
-              {statusSaving ? "מעבד..." : (form.status === "open" ? "סגור טופס" : "פתח טופס")}
+              {form.status === "open" ? (
+                <Lock className="w-4 h-4 ml-2" />
+              ) : (
+                <Unlock className="w-4 h-4 ml-2" />
+              )}
+              {statusSaving
+                ? "מעבד..."
+                : form.status === "open"
+                ? "סגור טופס"
+                : "פתח טופס"}
             </Button>
             <Dialog>
               <DialogTrigger asChild>
@@ -286,7 +311,7 @@ export default function FormEditor() {
                   תגובות ({responses.length})
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto bg-gray-800 text-white">
+              <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto bg-gradient-to-br from-gray-900 to-gray-800 text-white">
                 <DialogHeader>
                   <DialogTitle>תגובות לטופס</DialogTitle>
                   <DialogDescription>
@@ -295,9 +320,12 @@ export default function FormEditor() {
                 </DialogHeader>
                 <div className="space-y-4">
                   {responses.map((response) => (
-                    <Card key={response.id} className="p-4 bg-gray-700 text-white">
+                    <Card
+                      key={response.id}
+                      className="p-4 bg-transparent border border-gray-700 text-white"
+                    >
                       <div className="flex justify-between items-start mb-2">
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-gray-400">
                           {new Date(response.submitted_at).toLocaleString("he-IL")}
                         </p>
                         <Button
@@ -309,37 +337,52 @@ export default function FormEditor() {
                         </Button>
                       </div>
                       <div className="space-y-2">
-                        {Object.entries(response.answers).map(([qId, answer]: [string, any]) => {
-                          const question = questions.find((q) => q.id === qId);
-                          if (!question) return null;
+                        {Object.entries(response.answers).map(
+                          ([qId, answer]: [string, any]) => {
+                            const question = questions.find((q) => q.id === qId);
+                            if (!question) return null;
 
-                          let displayValue = answer;
-                          if (question.type === 'multiple-choice' && question.question_options) {
-                            const option = question.question_options.find((opt: any) => opt.id === answer);
-                            displayValue = option?.label || answer;
-                          } else if (question.type === 'checkbox' && Array.isArray(answer) && question.question_options) {
-                            displayValue = answer.map((optId: string) => {
-                              const option = question.question_options.find((opt: any) => opt.id === optId);
-                              return option?.label || optId;
-                            }).join(", ");
-                          } else if (Array.isArray(answer)) {
-                            displayValue = answer.join(", ");
+                            let displayValue = answer;
+                            if (
+                              question.type === "multiple-choice" &&
+                              question.question_options
+                            ) {
+                              const option =
+                                question.question_options.find(
+                                  (opt: any) => opt.id === answer
+                                );
+                              displayValue = option?.label || answer;
+                            } else if (
+                              question.type === "checkbox" &&
+                              Array.isArray(answer) &&
+                              question.question_options
+                            ) {
+                              displayValue = answer
+                                .map((optId: string) => {
+                                  const option =
+                                    question.question_options.find(
+                                      (opt: any) => opt.id === optId
+                                    );
+                                  return option?.label || optId;
+                                })
+                                .join(", ");
+                            } else if (Array.isArray(answer)) {
+                              displayValue = answer.join(", ");
+                            }
+
+                            return (
+                              <div key={qId}>
+                                <p className="font-medium">{question.title}</p>
+                                <p className="text-gray-400">{displayValue}</p>
+                              </div>
+                            );
                           }
-
-                          return (
-                            <div key={qId}>
-                              <p className="font-medium">{question.title}</p>
-                              <p className="text-muted-foreground">
-                                {displayValue}
-                              </p>
-                            </div>
-                          );
-                        })}
+                        )}
                       </div>
                     </Card>
                   ))}
                   {responses.length === 0 && (
-                    <p className="text-center text-muted-foreground py-8">
+                    <p className="text-center text-gray-400 py-8">
                       אין תגובות עדיין
                     </p>
                   )}
@@ -358,29 +401,33 @@ export default function FormEditor() {
         </div>
 
         <Tabs defaultValue="edit" dir="rtl">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-2 bg-transparent border border-gray-700">
             <TabsTrigger value="edit">עריכה</TabsTrigger>
             <TabsTrigger value="design">עיצוב</TabsTrigger>
           </TabsList>
 
           <TabsContent value="edit" className="space-y-4">
-            <Card className="p-6 bg-gray-800 text-white">
+            <Card className="p-6 bg-transparent border border-gray-700 text-white">
               <div className="space-y-4">
                 <div>
                   <Label>כותרת הטופס</Label>
                   <Input
                     value={form.title}
-                    onChange={(e) => setForm({ ...form, title: e.target.value })}
-                    className="bg-gray-700 text-white"
+                    onChange={(e) =>
+                      setForm({ ...form, title: e.target.value })
+                    }
+                    className="bg-gray-800 text-white"
                   />
                 </div>
                 <div>
                   <Label>תיאור</Label>
                   <Textarea
                     value={form.description || ""}
-                    onChange={(e) => setForm({ ...form, description: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, description: e.target.value })
+                    }
                     rows={3}
-                    className="bg-gray-700 text-white"
+                    className="bg-gray-800 text-white"
                   />
                 </div>
               </div>
@@ -395,25 +442,45 @@ export default function FormEditor() {
               />
             ))}
 
-            <Card className="p-6 bg-gray-800 text-white">
+            <Card className="p-6 bg-transparent border border-gray-700 text-white">
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                <Button variant="outline" onClick={() => addQuestion("text")} className="bg-black text-white hover:bg-gray-800">
+                <Button
+                  variant="outline"
+                  onClick={() => addQuestion("text")}
+                  className="bg-black text-white hover:bg-gray-800"
+                >
                   <Plus className="w-4 h-4 ml-2" />
                   טקסט קצר
                 </Button>
-                <Button variant="outline" onClick={() => addQuestion("textarea")} className="bg-black text-white hover:bg-gray-800">
+                <Button
+                  variant="outline"
+                  onClick={() => addQuestion("textarea")}
+                  className="bg-black text-white hover:bg-gray-800"
+                >
                   <Plus className="w-4 h-4 ml-2" />
                   טקסט ארוך
                 </Button>
-                <Button variant="outline" onClick={() => addQuestion("number")} className="bg-black text-white hover:bg-gray-800">
+                <Button
+                  variant="outline"
+                  onClick={() => addQuestion("number")}
+                  className="bg-black text-white hover:bg-gray-800"
+                >
                   <Plus className="w-4 h-4 ml-2" />
                   מספר
                 </Button>
-                <Button variant="outline" onClick={() => addQuestion("multiple-choice")} className="bg-black text-white hover:bg-gray-800">
+                <Button
+                  variant="outline"
+                  onClick={() => addQuestion("multiple-choice")}
+                  className="bg-black text-white hover:bg-gray-800"
+                >
                   <Plus className="w-4 h-4 ml-2" />
                   בחירה
                 </Button>
-                <Button variant="outline" onClick={() => addQuestion("checkbox")} className="bg-black text-white hover:bg-gray-800">
+                <Button
+                  variant="outline"
+                  onClick={() => addQuestion("checkbox")}
+                  className="bg-black text-white hover:bg-gray-800"
+                >
                   <Plus className="w-4 h-4 ml-2" />
                   תיבות סימון
                 </Button>
@@ -424,7 +491,12 @@ export default function FormEditor() {
           <TabsContent value="design">
             <CustomizationPanel
               style={form.style}
-              onStyleChange={(newStyle) => setForm({ ...form, style: { ...form.style, ...newStyle } })}
+              onStyleChange={(newStyle) =>
+                setForm({
+                  ...form,
+                  style: { ...form.style, ...newStyle },
+                })
+              }
             />
           </TabsContent>
         </Tabs>
