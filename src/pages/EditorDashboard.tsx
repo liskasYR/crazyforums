@@ -8,9 +8,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, Copy, Send, Loader2, Sparkles } from "lucide-react";
+import { ArrowLeft, Save, Copy } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CustomizationPanel from "@/components/CustomizationPanel";
+import AIAssistant from "@/components/AIAssistant";
 
 export default function FormEditor() {
   const { id } = useParams();
@@ -40,11 +41,7 @@ export default function FormEditor() {
       if (error) throw error;
       setForm(data);
     } catch {
-      toast({
-        title: "שגיאה",
-        description: "לא ניתן לטעון טופס",
-        variant: "destructive",
-      });
+      toast({ title: "שגיאה", description: "לא ניתן לטעון טופס", variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -60,11 +57,7 @@ export default function FormEditor() {
       if (error) throw error;
       toast({ title: "הטופס נשמר!" });
     } catch {
-      toast({
-        title: "שגיאה",
-        description: "לא ניתן לשמור טופס",
-        variant: "destructive",
-      });
+      toast({ title: "שגיאה", description: "לא ניתן לשמור טופס", variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -79,6 +72,17 @@ export default function FormEditor() {
   if (authLoading || loading || !form)
     return (
       <div className="min-h-screen flex items-center justify-center text-white bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900 animate-background">
+        <style>{`
+          @keyframes rgbGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+          .animate-background {
+            animation: rgbGradient 20s ease infinite;
+            background-size: 400% 400%;
+          }
+        `}</style>
         <p>טוען...</p>
       </div>
     );
@@ -100,6 +104,7 @@ export default function FormEditor() {
       <AIAssistant onImageGenerated={() => {}} />
 
       <div className="max-w-4xl mx-auto">
+        {/* כפתורי עליון */}
         <div className="flex justify-between items-center mb-6">
           <Button
             variant="outline"
@@ -126,12 +131,14 @@ export default function FormEditor() {
           </div>
         </div>
 
+        {/* טאבים */}
         <Tabs defaultValue="edit" dir="rtl">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="edit">עריכה</TabsTrigger>
             <TabsTrigger value="design">עיצוב</TabsTrigger>
           </TabsList>
 
+          {/* עריכה */}
           <TabsContent value="edit" className="space-y-4">
             <Card className="p-6 bg-gray-900/70 border border-purple-500 text-white">
               <div className="space-y-4">
@@ -139,9 +146,7 @@ export default function FormEditor() {
                   <Label>כותרת הטופס</Label>
                   <Input
                     value={form.title}
-                    onChange={(e) =>
-                      setForm({ ...form, title: e.target.value })
-                    }
+                    onChange={(e) => setForm({ ...form, title: e.target.value })}
                     className="bg-gray-800 text-white"
                   />
                 </div>
@@ -149,9 +154,7 @@ export default function FormEditor() {
                   <Label>תיאור</Label>
                   <Textarea
                     value={form.description || ""}
-                    onChange={(e) =>
-                      setForm({ ...form, description: e.target.value })
-                    }
+                    onChange={(e) => setForm({ ...form, description: e.target.value })}
                     rows={3}
                     className="bg-gray-800 text-white"
                   />
@@ -160,6 +163,7 @@ export default function FormEditor() {
             </Card>
           </TabsContent>
 
+          {/* עיצוב */}
           <TabsContent value="design">
             <CustomizationPanel
               style={form.style}
@@ -172,69 +176,6 @@ export default function FormEditor() {
             />
           </TabsContent>
         </Tabs>
-      </div>
-    </div>
-  );
-}
-
-/* ================== רכיב ה-AIAssistant המלא ================== */
-function AIAssistant({ onImageGenerated }: { onImageGenerated: () => void }) {
-  const [prompt, setPrompt] = useState("");
-  const [response, setResponse] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const handleSend = async () => {
-    if (!prompt.trim()) return;
-    setLoading(true);
-    try {
-      const res = await fetch("/api/ai", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
-      });
-      const data = await res.json();
-      setResponse(data.reply || "לא התקבלה תשובה מהבינה.");
-      if (data.imageGenerated) onImageGenerated();
-    } catch {
-      setResponse("שגיאה בשליחת ההודעה.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="fixed bottom-4 left-4 w-80 bg-gray-900/80 border border-purple-500 rounded-2xl shadow-xl p-4 backdrop-blur-sm">
-      <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-        <Sparkles className="w-5 h-5 text-purple-400" />
-        עוזר בינה מלאכותית
-      </h3>
-      <div className="space-y-3">
-        <Textarea
-          placeholder="שאל את הבינה..."
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          className="bg-gray-800 text-white"
-        />
-        <Button
-          onClick={handleSend}
-          disabled={loading}
-          className="w-full bg-purple-600 hover:bg-purple-700 text-white"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" /> שולח...
-            </>
-          ) : (
-            <>
-              <Send className="w-4 h-4 mr-2" /> שלח
-            </>
-          )}
-        </Button>
-        {response && (
-          <Card className="p-3 bg-gray-800/70 text-sm text-white border border-purple-400">
-            {response}
-          </Card>
-        )}
       </div>
     </div>
   );
