@@ -1,139 +1,82 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, LogOut, Edit, Trash2, ExternalLink, Share2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { ArrowLeft, Save, Copy, Send, Loader2, Sparkles } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import CustomizationPanel from "@/components/CustomizationPanel";
 
-export default function EditorDashboard() {
+export default function FormEditor() {
+  const { id } = useParams();
   const navigate = useNavigate();
-  const { user, loading: authLoading, signOut } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
-  const [forms, setForms] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [selectedFormId, setSelectedFormId] = useState("");
-  const [inviting, setInviting] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState<any>(null);
+  const [questions, setQuestions] = useState<any[]>([]);
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth");
   }, [user, authLoading, navigate]);
 
   useEffect(() => {
-    if (user) loadForms();
-  }, [user]);
+    if (user && id) loadForm();
+  }, [user, id]);
 
-  const loadForms = async () => {
+  const loadForm = async () => {
     try {
-      const { data: ownedForms, error: ownedError } = await supabase
+      const { data, error } = await supabase
         .from("forms")
         .select("*")
-        .eq("created_by", user?.id)
-        .order("created_at", { ascending: false });
-
-      if (ownedError) throw ownedError;
-
-      const { data: editorRelations, error: editorError } = await supabase
-        .from("form_editors")
-        .select("form_id")
-        .eq("user_id", user?.id);
-
-      if (editorError) throw editorError;
-
-      const editorFormIds = editorRelations?.map((r) => r.form_id) || [];
-
-      let sharedForms = [];
-      if (editorFormIds.length > 0) {
-        const { data: sharedFormsData, error: sharedError } = await supabase
-          .from("forms")
-          .select("*")
-          .in("id", editorFormIds)
-          .order("created_at", { ascending: false });
-
-        if (sharedError) throw sharedError;
-        sharedForms = sharedFormsData || [];
-      }
-
-      const allForms = [...(ownedForms || []), ...sharedForms];
-      const uniqueForms = Array.from(new Map(allForms.map((form) => [form.id, form])).values());
-      setForms(uniqueForms);
+        .eq("id", id)
+        .single();
+      if (error) throw error;
+      setForm(data);
     } catch {
-      toast({ title: "שגיאה", description: "לא ניתן לטעון טפסים", variant: "destructive" });
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן לטעון טופס",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const createNewForm = async () => {
+  const saveForm = async () => {
+    setSaving(true);
     try {
-      const slug = await supabase.rpc("generate_unique_slug", { base_text: "new-form" });
-      const { data: newForm, error } = await supabase
+      const { error } = await supabase
         .from("forms")
-        .insert({
-          title: "טופס חדש",
-          description: "תיאור הטופס",
-          slug: slug.data,
-          created_by: user?.id,
-        })
-        .select()
-        .single();
-
+        .update({ title: form.title, description: form.description })
+        .eq("id", id);
       if (error) throw error;
-      await supabase.from("form_styles").insert({ form_id: newForm.id });
-      navigate(`/editor/${newForm.id}`);
+      toast({ title: "הטופס נשמר!" });
     } catch {
-      toast({ title: "שגיאה", description: "לא ניתן ליצור טופס", variant: "destructive" });
-    }
-  };
-
-  const deleteForm = async (formId: string) => {
-    try {
-      const { error } = await supabase.from("forms").delete().eq("id", formId);
-      if (error) throw error;
-      setForms((prev) => prev.filter((f) => f.id !== formId));
-      toast({ title: "הטופס נמחק" });
-    } catch {
-      toast({ title: "שגיאה", description: "לא ניתן למחוק טופס", variant: "destructive" });
-    }
-  };
-
-  const sendInvitation = async () => {
-    if (!inviteEmail || !selectedFormId) return;
-    setInviting(true);
-    try {
-      const form = forms.find((f) => f.id === selectedFormId);
-      const { error } = await supabase.functions.invoke("send-editor-invitation", {
-        body: {
-          toEmail: inviteEmail,
-          formTitle: form.title,
-          formSlug: form.slug,
-          inviterName: user?.email || "משתמש",
-        },
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן לשמור טופס",
+        variant: "destructive",
       });
-      if (error) throw error;
-      toast({ title: "ההזמנה נשלחה!", description: `הוזמנה ל-${inviteEmail}` });
-      setInviteEmail("");
-      setSelectedFormId("");
-    } catch {
-      toast({ title: "שגיאה", description: "לא ניתן לשלוח הזמנה", variant: "destructive" });
     } finally {
-      setInviting(false);
+      setSaving(false);
     }
   };
 
-  const copyFormLink = (slug: string) => {
-    const link = `${window.location.origin}/f/${slug}`;
+  const copyFormLink = () => {
+    const link = `${window.location.origin}/f/${form.slug}`;
     navigator.clipboard.writeText(link);
-    toast({ title: "הקישור הועתק!", description: "הועתק ללוח" });
+    toast({ title: "הקישור הועתק!" });
   };
 
-  if (authLoading || loading)
+  if (authLoading || loading || !form)
     return (
       <div className="min-h-screen flex items-center justify-center text-white bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900 animate-background">
         <p>טוען...</p>
@@ -154,138 +97,143 @@ export default function EditorDashboard() {
         }
       `}</style>
 
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold rgb-text">הטפסים שלי</h1>
-            <p className="text-gray-300">{user?.email}</p>
-          </div>
-          <div className="flex gap-2">
-            <Button onClick={createNewForm} className="bg-purple-600 hover:bg-purple-700">
-              <Plus className="w-4 h-4 ml-2" />
-              טופס חדש
-            </Button>
+      <AIAssistant onImageGenerated={() => {}} />
 
-            {/* כפתור התנתק שחור */}
+      <div className="max-w-4xl mx-auto">
+        <div className="flex justify-between items-center mb-6">
+          <Button
+            variant="outline"
+            onClick={() => navigate("/editor")}
+            className="bg-black text-white hover:bg-gray-800"
+          >
+            <ArrowLeft className="w-4 h-4 ml-2" /> חזרה
+          </Button>
+          <div className="flex gap-2">
             <Button
-              variant="default"
-              onClick={signOut}
+              variant="outline"
+              onClick={copyFormLink}
               className="bg-black text-white hover:bg-gray-800"
             >
-              <LogOut className="w-4 h-4 ml-2" />
-              התנתק
+              <Copy className="w-4 h-4 ml-2" /> העתק קישור
+            </Button>
+            <Button
+              onClick={saveForm}
+              disabled={saving}
+              className="bg-black text-white hover:bg-gray-800"
+            >
+              <Save className="w-4 h-4 ml-2" /> {saving ? "שומר..." : "שמור"}
             </Button>
           </div>
         </div>
 
-        {forms.length === 0 ? (
-          <Card className="p-12 text-center bg-gray-900/50 border border-purple-500 text-white">
-            <p className="text-gray-400 mb-4">אין לך טפסים עדיין</p>
-            <Button onClick={createNewForm} className="bg-purple-600 hover:bg-purple-700">
-              <Plus className="w-4 h-4 ml-2" />
-              צור טופס ראשון
-            </Button>
+        <Tabs defaultValue="edit" dir="rtl">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="edit">עריכה</TabsTrigger>
+            <TabsTrigger value="design">עיצוב</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="edit" className="space-y-4">
+            <Card className="p-6 bg-gray-900/70 border border-purple-500 text-white">
+              <div className="space-y-4">
+                <div>
+                  <Label>כותרת הטופס</Label>
+                  <Input
+                    value={form.title}
+                    onChange={(e) =>
+                      setForm({ ...form, title: e.target.value })
+                    }
+                    className="bg-gray-800 text-white"
+                  />
+                </div>
+                <div>
+                  <Label>תיאור</Label>
+                  <Textarea
+                    value={form.description || ""}
+                    onChange={(e) =>
+                      setForm({ ...form, description: e.target.value })
+                    }
+                    rows={3}
+                    className="bg-gray-800 text-white"
+                  />
+                </div>
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="design">
+            <CustomizationPanel
+              style={form.style}
+              onStyleChange={(newStyle) =>
+                setForm({
+                  ...form,
+                  style: { ...form.style, ...newStyle },
+                })
+              }
+            />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+}
+
+/* ================== רכיב ה-AIAssistant המלא ================== */
+function AIAssistant({ onImageGenerated }: { onImageGenerated: () => void }) {
+  const [prompt, setPrompt] = useState("");
+  const [response, setResponse] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSend = async () => {
+    if (!prompt.trim()) return;
+    setLoading(true);
+    try {
+      const res = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
+      });
+      const data = await res.json();
+      setResponse(data.reply || "לא התקבלה תשובה מהבינה.");
+      if (data.imageGenerated) onImageGenerated();
+    } catch {
+      setResponse("שגיאה בשליחת ההודעה.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed bottom-4 left-4 w-80 bg-gray-900/80 border border-purple-500 rounded-2xl shadow-xl p-4 backdrop-blur-sm">
+      <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+        <Sparkles className="w-5 h-5 text-purple-400" />
+        עוזר בינה מלאכותית
+      </h3>
+      <div className="space-y-3">
+        <Textarea
+          placeholder="שאל את הבינה..."
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+          className="bg-gray-800 text-white"
+        />
+        <Button
+          onClick={handleSend}
+          disabled={loading}
+          className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" /> שולח...
+            </>
+          ) : (
+            <>
+              <Send className="w-4 h-4 mr-2" /> שלח
+            </>
+          )}
+        </Button>
+        {response && (
+          <Card className="p-3 bg-gray-800/70 text-sm text-white border border-purple-400">
+            {response}
           </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {forms.map((form) => (
-              <Card key={form.id} className="bg-gray-900/70 border border-purple-500 text-white">
-                <CardHeader>
-                  <CardTitle>{form.title}</CardTitle>
-                  <CardDescription className="text-gray-400">{form.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-2">
-                    {/* כפתור עריכה */}
-                    <Button
-                      variant="default"
-                      size="sm"
-                      className="bg-black text-white hover:bg-gray-800"
-                      onClick={() => navigate(`/editor/${form.id}`)}
-                    >
-                      <Edit className="w-4 h-4 ml-1" /> ערוך
-                    </Button>
-
-                    {/* כפתור העתק קישור */}
-                    <Button
-                      variant="default"
-                      size="sm"
-                      className="bg-black text-white hover:bg-gray-800"
-                      onClick={() => copyFormLink(form.slug)}
-                    >
-                      <ExternalLink className="w-4 h-4 ml-1" /> העתק קישור
-                    </Button>
-
-                    {/* כפתור שתף */}
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button
-                          variant="default"
-                          size="sm"
-                          className="bg-black text-white hover:bg-gray-800"
-                          onClick={() => setSelectedFormId(form.id)}
-                        >
-                          <Share2 className="w-4 h-4 ml-1" /> שתף
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>שתף גישה לעריכה</DialogTitle>
-                          <DialogDescription>הזן כתובת אימייל של עורך נוסף</DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div>
-                            <Label htmlFor="invite-email">אימייל</Label>
-                            <Input
-                              id="invite-email"
-                              type="email"
-                              value={inviteEmail}
-                              onChange={(e) => setInviteEmail(e.target.value)}
-                              placeholder="editor@example.com"
-                            />
-                          </div>
-                          <Button
-                            onClick={sendInvitation}
-                            disabled={inviting || !inviteEmail}
-                            className="w-full bg-purple-600 hover:bg-purple-700"
-                          >
-                            {inviting ? "שולח..." : "שלח הזמנה"}
-                          </Button>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-
-                    {/* כפתור מחיקה */}
-                    {form.created_by === user?.id && (
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            className="bg-black text-white hover:bg-gray-800"
-                          >
-                            <Trash2 className="w-4 h-4 ml-1" /> מחק
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>האם אתה בטוח?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              פעולה זו תמחק את הטופס לצמיתות
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>ביטול</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => deleteForm(form.id)}>מחק</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
         )}
       </div>
     </div>
